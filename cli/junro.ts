@@ -36,8 +36,13 @@ const NOT_HUMAN = [
 ];
 function extractUtterances(dir: string, since?: string): Utterance[] {
   if (!existsSync(dir)) fail(`transcript dir not found: ${dir}`);
+  // サブエージェント/ワークフローのトランスクリプトでは 'user' ロール＝親エージェントの
+  // 委譲プロンプトであり、人間の発話ではない。巡回対象は人間のセッションだけ。
   const files = (readdirSync(dir, { recursive: true }) as string[])
-    .filter((f) => f.endsWith('.jsonl')).map((f) => join(dir, f));
+    .filter((f) => f.endsWith('.jsonl'))
+    .filter((f) => !basename(f).startsWith('agent-') && basename(f) !== 'journal.jsonl')
+    .filter((f) => !/(^|\/)(subagents|tasks|workflows)\//.test(f))
+    .map((f) => join(dir, f));
   const out: Utterance[] = [];
   for (const file of files) {
     const session = basename(file, '.jsonl');

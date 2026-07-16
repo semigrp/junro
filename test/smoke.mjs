@@ -23,6 +23,14 @@ writeFileSync(join(proj, 'sess01.jsonl'), [
   entry('<command-name>/foo</command-name>', '2026-07-02T09:20:00.000Z'), // harness artifact
 ].join('\n'));
 
+// subagent transcripts must be invisible to scan: their 'user' role is the parent's prompt
+const sub = join(TMP, 'projects', 'demo', 'subagents');
+mkdirSync(sub, { recursive: true });
+writeFileSync(join(sub, 'agent-abc123.jsonl'),
+  entry('npmではなくpnpmを利用して（これは委譲プロンプトであり人間ではない）', '2026-07-02T09:30:00.000Z'));
+writeFileSync(join(TMP, 'projects', 'demo', 'agent-def456.jsonl'),
+  entry('やめてください（偽の人間発話）', '2026-07-02T09:31:00.000Z'));
+
 const cli = (args, input) =>
   execSync(`node ${join(ROOT, 'cli', 'junro.ts')} ${args}`, { input, stdio: ['pipe', 'pipe', 'pipe'] }).toString();
 
@@ -33,6 +41,7 @@ const records = readFileSync(scanOut, 'utf8').trim().split('\n').map((l) => JSON
 const cats = records.map((r) => r.category).sort();
 assert.deepStrictEqual(cats, ['boundary_check', 'correction', 'institutionalize'], `unexpected: ${cats}`);
 assert.ok(records.every((r) => r.schema === 'junro.scan/v1' && r.id.startsWith('sess01:')));
+assert.ok(records.every((r) => !r.id.startsWith('agent-')), 'subagent transcripts must never be scanned as human utterances');
 
 // --- propose: fresh correction → draft ---
 const norms = join(TMP, 'norm');
