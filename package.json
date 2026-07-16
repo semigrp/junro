@@ -1,0 +1,11 @@
+{
+  "name": "junro",
+  "version": "0.1.0",
+  "description": "Patrol the outbound leg: measure whether the human's corrections survive as norms",
+  "type": "module",
+  "bin": { "junro": "./cli/junro.ts" },
+  "engines": { "node": ">=24" },
+  "scripts": { "test": "node test/smoke.mjs" },
+  "repository": { "type": "git", "url": "https://github.com/semigrp/junro.git" },
+  "license": "Apache-2.0"
+}

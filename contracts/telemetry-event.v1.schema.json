@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semigrp.dev/fukuro/contracts/telemetry-event.v1.schema.json",
+  "title": "Fukuro TelemetryEventV1",
+  "description": "One NDJSON line of telemetry produced by an external system for `fukuro import`. Fukuro owns this contract; producers vendor snapshots of it.",
+  "type": "object",
+  "required": ["schema", "source", "sourceEventId", "occurredAt", "kind", "subject", "refs", "data"],
+  "properties": {
+    "schema": { "const": "fukuro.telemetry-event/v1" },
+    "source": { "type": "string", "minLength": 1, "description": "Producing system id (e.g. ouro). Combined with sourceEventId for idempotency." },
+    "sourceEventId": { "type": "string", "minLength": 1 },
+    "occurredAt": { "type": "string", "format": "date-time", "description": "Source-stamped instant; becomes the event's ts. Must not be in the future." },
+    "kind": { "type": "string", "minLength": 1, "description": "Canonical fukuro kinds pair into ledgers/KPIs; namespaced producer kinds are accepted as-is." },
+    "subject": { "$ref": "#/$defs/resourceRef", "description": "The unit this event is about; import derives loop_id as `<source>:<subject.id>`." },
+    "refs": { "type": "array", "items": { "$ref": "#/$defs/resourceRef" }, "description": "Related resources. GitHub issue/pull refs with numeric tails fill the issue/pr columns; the rest stay with the producer." },
+    "data": { "type": "object" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "resourceRef": {
+      "type": "object",
+      "required": ["system", "type", "id", "version"],
+      "properties": {
+        "system": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "uri": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
