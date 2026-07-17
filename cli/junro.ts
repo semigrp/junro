@@ -233,7 +233,9 @@ function cmdReport(): void {
 }
 
 // Emit fukuro.telemetry-event/v1 (vendored contract: contracts/). Canonical
-// kind for a correction is human_intervention; the rest ship namespaced.
+// kind for a correction is human_intervention — but ONLY when an external
+// classifier vouched for it. Heuristic-tier corrections carry false positives
+// and must not pollute the canonical ledger kind; they ship as candidates.
 const KIND: Record<Category, string> = {
   correction: 'human_intervention',
   boundary_check: 'junro.boundary_check',
@@ -244,15 +246,18 @@ const KIND: Record<Category, string> = {
 function cmdEmit(): void {
   for (const r of readRecords(opt('in'))) {
     if (!r.ts) continue;
+    const kind = r.category === 'correction' && r.classifier !== 'external'
+      ? 'junro.correction_candidate'
+      : KIND[r.category];
     console.log(JSON.stringify({
       schema: 'fukuro.telemetry-event/v1',
       source: 'junro',
       sourceEventId: r.id,
       occurredAt: r.ts,
-      kind: KIND[r.category],
+      kind,
       subject: { system: 'junro', type: 'session', id: r.session, version: '1' },
       refs: [],
-      data: { category: r.category, note: r.text.slice(0, 200), ...(r.statement ? { statement: r.statement } : {}) },
+      data: { category: r.category, classifier: r.classifier, note: r.text.slice(0, 200), ...(r.statement ? { statement: r.statement } : {}) },
     }));
   }
 }

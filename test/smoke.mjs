@@ -82,7 +82,10 @@ for (const e of emitted) {
   assert.strictEqual(e.schema, 'fukuro.telemetry-event/v1');
   assert.strictEqual(e.source, 'junro');
 }
-assert.ok(emitted.some((e) => e.kind === 'human_intervention'), 'correction must emit as human_intervention');
+// Heuristic-tier corrections must NOT claim the canonical kind (false-positive containment)
+assert.ok(emitted.some((e) => e.kind === 'junro.correction_candidate'), 'heuristic correction must emit as candidate');
+assert.ok(!emitted.some((e) => e.kind === 'human_intervention'), 'canonical kind is reserved for external-classifier corrections');
+assert.ok(emitted.every((e) => e.data.classifier === 'heuristic'), 'classifier tier must be recorded in data');
 
 rmSync(TMP, { recursive: true, force: true });
 console.log('smoke: ok');
